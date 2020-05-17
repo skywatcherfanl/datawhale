@@ -28,14 +28,14 @@ Pytorch 0.4.0版开始，Variable并入Tensor。
 shape：张量的形状，如(64，3，224，224)  
 device：张量所在设备，GPU/CPU
 
-`Tensor`是PyTorch实现多维数组计算和自动微分的关键数据结构。一方面，它类似于numpy的ndarray，用户可以对`Tensor`进行各种数学运算；另一方面，当设置`.requires_grad = True`之后，在其上进行的各种操作就会被记录下来，它将开始追踪在其上的所有操作（这样就可以利用链式法则进行梯度传播了），其内部实现机制被称为动态计算图(dynamic computation graph)。完成计算后，可以调用`.backward()`来完成所有梯度计算。此`Tensor`的梯度将累积到`.grad`属性中。
+`Tensor`是PyTorch实现多维数组计算和自动微分的关键数据结构。一方面，它类似于numpy的ndarray，用户可以对`Tensor`进行各种数学运算；另一方面，当设置`.requires_grad = True`之后，在其上进行的各种操作就会被记录下来，它将开始追踪在其上的所有操作，从而利用链式法则进行梯度传播。完成计算后，可以调用`.backward()`来完成所有梯度计算。此`Tensor`的梯度将累积到`.grad`属性中。
 
 如果不想要被继续追踪，可以调用`.detach()`将其从追踪记录中分离出来，可以防止将来的计算被追踪，这样梯度就传不过去了。此外，还可以用`with torch.no_grad()`将不想被追踪的操作代码块包裹起来，这种方法在评估模型的时候很常用，因为在评估模型时，我们并不需要计算可训练参数（`requires_grad=True`）的梯度。
 
 ## 1.2.2 Function类
-`Function`是另外一个很重要的类。`Tensor`和`Function`互相结合就可以构建一个记录有整个计算过程的有向无环图（DAG）。每个`Tensor`都有一个`.grad_fn`属性，该属性即创建该`Tensor`的`Function`，就是说该`Tensor`是不是通过某些运算得到的，若是，则`grad_fn`返回一个与这些运算相关的对象，否则是None。
+`Function`是另外一个很重要的类。`Tensor`和`Function`互相结合就可以构建一个记录有整个计算过程的有向无环图(Directed Acyclic Graph，DAG)。每个`Tensor`都有一个`.grad_fn`属性，该属性即创建该`Tensor`的`Function`，就是说该`Tensor`是不是通过某些运算得到的，若是，则`grad_fn`返回一个与这些运算相关的对象，否则是None。
 
-我们已经知道PyTorch使用动态计算图(DAG)记录计算的全过程，那么DAG是怎样建立的呢？DAG的节点是`Function`对象，边表示数据依赖，从输出指向输入。
+我们已经知道PyTorch使用有向无环图DAG记录计算的全过程，那么DAG是怎样建立的呢？DAG的节点是`Function`对象，边表示数据依赖，从输出指向输入。
 每当对`Tensor`施加一个运算的时候，就会产生一个`Function`对象，它产生运算的结果，记录运算的发生，并且记录运算的输入。`Tensor`使用`.grad_fn`属性记录这个计算图的入口。反向传播过程中，autograd引擎会按照逆序，通过`Function`的`backward`依次计算梯度。
 
 <div align=center>
@@ -45,13 +45,22 @@ device：张量所在设备，GPU/CPU
 
 
 ## 1.2.3 autograd
+深度学习模型的训练就是不断更新权值，权值的更新需要求解梯度，梯度在模型训练中是至关重要的。Pytorch提供自动求导系统，我们不需要手动计算梯度，只需要搭建好前向传播的计算图，然后根据Pytorch中的autograd方法就可以得到所有张量的梯度。
 
-**1）torch.autograd.backward(tensors,grad_tensors=None,retain_graph=None,create_graph=False) 自动求梯度**
+``` python
+torch.autograd.backward(tensors,
+                        grad_tensors=None,
+                        retain_grad=None,
+                        create_graph=False)
+```
 
->tensors: 用于求导的张量  
-retain_graph : 保存计算图  
-create_graph : 创建导数计算图，用于高阶求导  
-grad_tensors：多梯度权重，当一个神经元具有多个loss时需要对不同loss的梯度进行赋权  
+
+>功能：自动求取梯度  
+tensors: 用于求导的张量，如loss  
+retain_graph : 保存计算图；由于pytorch采用动态图机制，在每一次反向传播结束之后，计算图都会释放掉。如果想继续使用计算图，就需要设置参数retain_graph为True  
+create_graph : 创建导数计算图，用于高阶求导，例如二阶导数、三阶导数等  
+grad_tensors：多梯度权重；当有多个loss需要去计算梯度的时候，就要设计各个loss之间的权重比例  
+
 
 **2）torch.autograd.grad(outputs,inputs,grad_outputs=None,retain_graph=None,create_graph=False) 求梯度**
 
