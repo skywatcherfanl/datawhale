@@ -15,7 +15,7 @@ Variable是 torch.autograd中的数据类型，主要用于封装 Tensor，进�
 grad : data的梯度  
 grad\_fn : 创建 Tensor的 Function，是自动求导的关键  
 requires_grad：指示是否需要梯度  
-is_ leaf : 指示是否是叶子结点（张量）   
+is_leaf : 指示是否是叶子结点 
 
 
 <div align=center>
@@ -46,6 +46,7 @@ device：张量所在设备，GPU/CPU
 
 ## 1.2.3 autograd
 深度学习模型的训练就是不断更新权值，权值的更新需要求解梯度，梯度在模型训练中是至关重要的。Pytorch提供自动求导系统，我们不需要手动计算梯度，只需要搭建好前向传播的计算图，然后根据Pytorch中的autograd方法就可以得到所有张量的梯度。
+**（1）torch.autograd.backward**
 
 ``` python
 torch.autograd.backward(tensors,
@@ -62,13 +63,22 @@ create_graph : 创建导数计算图，用于高阶求导，例如二阶导数�
 grad_tensors：多梯度权重；当有多个loss需要去计算梯度的时候，就要设计各个loss之间的权重比例  
 
 
-**2）torch.autograd.grad(outputs,inputs,grad_outputs=None,retain_graph=None,create_graph=False) 求梯度**
+**（2）torch.autograd.grad**
 
->outputs: 用于求导的张量，如 loss  
-inputs : 需要梯度的张量  
-create_graph : 创建导数计算图，用于高阶求导  
-retain_graph : 保存计算图  
-grad_outputs：多梯度权重  
+``` python
+torch.qutograd.grad(outputs,
+                    inputs,
+                    grad_outputs=None,
+                    retain_graph=None,
+                    create_graph=False)
+```
+>功能：求取梯度  
+outputs：用于求导的张量，如loss  
+inputs：需要梯度的张量，如w   
+create_graph：创建导数计算图，用于高阶求导   
+retain_graph：保存计算图  
+grad_outputs：多梯度权重   
+
 
 
 
