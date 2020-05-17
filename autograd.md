@@ -3,8 +3,32 @@
 
 在深度学习中，我们经常需要对函数求梯度（gradient）。PyTorch提供的[autograd](https://pytorch.org/docs/stable/autograd.html)包能够根据输入和前向传播过程自动构建计算图，并执行反向传播。本节将介绍如何使用autograd包来进行自动求梯度的有关操作。
 
-## 1.2.1 PyTorch的autograd简介
+## 1.2.1 基本概念介绍
 
+### 1.2.1.1 Variable
+
+
+
+>Variable是 torch.autograd中的数据类型，主要用于封装 Tensor，进行自动求导。  
+data : 被包装的Tensor  
+grad : data的梯度  
+grad\_fn : 创建 Tensor的 Function，是自动求导的关键  
+requires_grad：指示是否需要梯度  
+is_ leaf : 指示是否是叶子结点（张量）   
+
+### 1.2.1.2 Tensor
+
+
+Pytorch 0.4.0版开始，Variable并入Tensor。  
+>dtype：张量的数据类型，如torch.FloatTensor，torch.cuda.FloatTensor  
+shape：张量的形状，如(64，3，224，224)  
+device：张量所在设备，GPU/CPU，是加速的关键  
+
+#
+
+
+
+## 
 
 
 
@@ -28,20 +52,20 @@
 
 ## torch.autograd
 
-**1）torch.autograd.backward(tensors,grad_tensors=None,retain_graph=None,create_graph=False)，自动求梯度**
+**1）torch.autograd.backward(tensors,grad_tensors=None,retain_graph=None,create_graph=False) 自动求梯度**
 
->tensors: 用于求导的张量
-retain_graph : 保存计算图
-create_graph : 创建导数计算图，用于高阶求导
-grad_tensors：多梯度权重，当一个神经元具有多个loss时需要对不同loss的梯度进行赋权
+>tensors: 用于求导的张量  
+retain_graph : 保存计算图  
+create_graph : 创建导数计算图，用于高阶求导  
+grad_tensors：多梯度权重，当一个神经元具有多个loss时需要对不同loss的梯度进行赋权  
 
-**2）torch.autograd.grad(outputs,inputs,grad_outputs=None,retain_graph=None,create_graph=False)，求梯度**
+**2）torch.autograd.grad(outputs,inputs,grad_outputs=None,retain_graph=None,create_graph=False) 求梯度**
 
->outputs: 用于求导的张量，如 loss
-inputs : 需要梯度的张量
-create_graph : 创建导数计算图，用于高阶求导
-retain_graph : 保存计算图
-grad_outputs：多梯度权重
+>outputs: 用于求导的张量，如 loss  
+inputs : 需要梯度的张量  
+create_graph : 创建导数计算图，用于高阶求导  
+retain_graph : 保存计算图  
+grad_outputs：多梯度权重  
 
 
 
@@ -290,12 +314,13 @@ tensor([2.])
 
 
 
-## 小结
+## autograd注意事项
 
-autograd注意事项
 * 梯度不自动清零，如果不清零梯度会累加，所以需要在每次梯度后人为清零：w.grad.zero_()，_()是原位操作，在原始地址上进行更改。
-* 依赖于叶子结点的结点，requires_grad默认为True
+* 依赖于叶子结点的结点，requires_grad默认为True。
 * 叶子结点不可执行in-place，因为其他节点在计算梯度时需要用到叶子节点，所以叶子地址中的值不得改变否则会是其他节点求梯度时出错。所以叶子节点不能进行原位计算。
+* 注意在y.backward()时，如果y是标量量，则不需要为backward()传⼊入任何参数；否则，需要传⼊一个与y同形的Tensor。
 
+## 参考
 -----------
 > [原书传送门](https://zh.d2l.ai/chapter_recurrent-neural-networks/rnn.html)
