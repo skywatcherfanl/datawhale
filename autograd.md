@@ -7,7 +7,10 @@
 
 ### 1.2.1.1 Variable
 
-
+<div align=center>
+<img width="500" src="image/variable.PNG"/>
+</div>
+<div align=center>图1.1 Variable</div>
 
 >Variable是 torch.autograd中的数据类型，主要用于封装 Tensor，进行自动求导。  
 data : 被包装的Tensor  
@@ -18,6 +21,10 @@ is_ leaf : 指示是否是叶子结点（张量）
 
 ### 1.2.1.2 Tensor
 
+<div align=center>
+<img width="500" src="image/tensor.PNG"/>
+</div>
+<div align=center>图1.2 Tensor</div>
 
 Pytorch 0.4.0版开始，Variable并入Tensor。  
 >dtype：张量的数据类型，如torch.FloatTensor，torch.cuda.FloatTensor  
@@ -47,7 +54,7 @@ device：张量所在设备，GPU/CPU，是加速的关键
 <div align=center>
 <img width="500" src="image/动态计算图.gif"/>
 </div>
-<div align=center>图1.1 动态计算图</div>
+<div align=center>图1.3 动态计算图</div>
 
 
 ## torch.autograd
