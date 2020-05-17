@@ -292,4 +292,4 @@ tensor([2.])
 
 ## 参考
 -----------
-> [动手学深度学习](https://zh.d2l.ai/chapter_recurrent-neural-networks/rnn.html)
+> [Dive-into-DL-PyTorch](https://github.com/ShusenTang/Dive-into-DL-PyTorch/edit/master/docs/chapter02_prerequisite/2.3_autograd.md)
