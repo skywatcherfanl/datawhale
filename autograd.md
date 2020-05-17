@@ -2,8 +2,8 @@
 ===========================================
 
 在深度学习中，我们经常需要对函数求梯度（gradient）。PyTorch提供的[autograd](https://pytorch.org/docs/stable/autograd.html)包能够根据输入和前向传播过程自动构建计算图，并执行反向传播。本节将介绍如何使用autograd包来进行自动求梯度的有关操作。
-
-## 1.2.1 Variable和Tensor
+## 1.2.1 基本概念介绍
+### 1.2.1.1 Variable和Tensor
 
 <div align=center>
 <img width="500" src="image/variable.PNG"/>
@@ -32,11 +32,11 @@ device：张量所在设备，GPU/CPU
 
 如果不想要被继续追踪，可以调用`.detach()`将其从追踪记录中分离出来，可以防止将来的计算被追踪，这样梯度就传不过去了。此外，还可以用`with torch.no_grad()`将不想被追踪的操作代码块包裹起来，这种方法在评估模型的时候很常用，因为在评估模型时，我们并不需要计算可训练参数（`requires_grad=True`）的梯度。
 
-## 1.2.2 Function类
+### 1.2.1.2 Function类
 `Function`是另外一个很重要的类。`Tensor`和`Function`互相结合就可以构建一个记录有整个计算过程的有向无环图(Directed Acyclic Graph，DAG)。每个`Tensor`都有一个`.grad_fn`属性，该属性即创建该`Tensor`的`Function`，就是说该`Tensor`是不是通过某些运算得到的，若是，则`grad_fn`返回一个与这些运算相关的对象，否则是None。
 
 我们已经知道PyTorch使用有向无环图DAG记录计算的全过程，那么DAG是怎样建立的呢？DAG的节点是`Function`对象，边表示数据依赖，从输出指向输入。
-每当对`Tensor`施加一个运算的时候，就会产生一个`Function`对象，它产生运算的结果，记录运算的发生，并且记录运算的输入。`Tensor`使用`.grad_fn`属性记录这个计算图的入口。反向传播过程中，autograd引擎会按照逆序，通过`Function`的`backward`依次计算梯度。
+每当对`Tensor`施加一个运算的时候，就会产生一个`Function`对象，它产生运算的结果，记录运算的发生，并且记录运算的输入。`Tensor`使用`.grad_fn`属性记录这个计算图的入口。反向传播过程中，`autograd`引擎会按照逆序，通过`Function`的`backward`依次计算梯度。
 
 <div align=center>
 <img width="500" src="image/动态计算图.gif"/>
@@ -44,9 +44,10 @@ device：张量所在设备，GPU/CPU
 <div align=center>图1.3 动态计算图</div>
 
 
-## 1.2.3 autograd
-深度学习模型的训练就是不断更新权值，权值的更新需要求解梯度，梯度在模型训练中是至关重要的。Pytorch提供自动求导系统，我们不需要手动计算梯度，只需要搭建好前向传播的计算图，然后根据Pytorch中的autograd方法就可以得到所有张量的梯度。
-**（1）torch.autograd.backward**
+## 1.2.2 autograd 自动求梯度
+深度学习模型的训练就是不断更新权值，权值的更新需要求解梯度，梯度在模型训练中是至关重要的。Pytorch提供自动求导系统，我们不需要手动计算梯度，只需要搭建好前向传播的计算图，然后根据Pytorch中的`autograd`方法就可以得到所有张量的梯度。
+  
+## 1.2.2.1 torch.autograd.backward 
 
 ``` python
 torch.autograd.backward(tensors,
@@ -63,7 +64,7 @@ create_graph : 创建导数计算图，用于高阶求导，例如二阶导数�
 grad_tensors：多梯度权重；当有多个loss需要去计算梯度的时候，就要设计各个loss之间的权重比例  
 
 
-**（2）torch.autograd.grad**
+## 1.2.2.2 torch.autograd.grad 
 
 ``` python
 torch.qutograd.grad(outputs,
@@ -79,10 +80,12 @@ create_graph：创建导数计算图，用于高阶求导
 retain_graph：保存计算图  
 grad_outputs：多梯度权重   
 
+## 1.2.3 代码示例
 
 
 
-下面通过一些例子来理解这些概念。  
+
+
 
 ## 1.2.2 `Tensor`
 
