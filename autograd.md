@@ -142,31 +142,7 @@ retain_graph：保存计算图
 grad_outputs：多梯度权重   
 
 
-### 1.2.2.3 代码示例
-``` python
-import torch
-torch.manual_seed(10)  #用于设置随机数
-
-w = torch.tensor([1.], requires_grad=True)    #创建叶子张量，并设定requires_grad为True，因为需要计算梯度；
-x = torch.tensor([2.], requires_grad=True)    #创建叶子张量，并设定requires_grad为True，因为需要计算梯度；
-
-a = torch.add(w, x)    #执行运算并搭建动态计算图
-b = torch.add(w, 1)
-y = torch.mul(a, b)
-
-y.backward(retain_graph=True)   #对y执行backward方法就可以得到x和w两个叶子节点
-print(w.grad)   #输出为tensor([5.])
-``` 
-从代码中可以发现对y求导使用的是y.backward()方法，也就是张量中的类方法。我们上面介绍的是torch.autograd中的backward()。这两个方法之间有什么联系呢？
-通过pycharm中的断点调试，可以发现y.backward()是Tensor.py中的一个类方法的函数。这个函数只有一行代码，就是调用torch.autograd.backward()。
-``` python
-def backward(self, gradient=None, retain_graph=None, create_graph=False):
-    torch.autograd.backward(self, gradient, retain_graph, create_graph)
-```
-从代码调试中可以知道张量中的backward()方法实际直接调用了torch.autograd中的backward()。
-backward()中有一个retain_grad参数，它是用来保存计算图的，如果还想执行一次反向传播 ，必须将retain_grad参数设置为retain_grad=True，否则代码会报错。因为如果没有retain_grad=True，每进行一次backward之后，计算图都会被清空，没法再进行一次backward()操作。
-
-
+### 1.2.2.3 链式法则
 
 数学上，如果有一个函数值和自变量都为向量的函数 $\vec{y}=f(\vec{x})$, 那么 $\vec{y}$ 关于 $\vec{x}$ 的梯度就是一个雅可比矩阵（Jacobian matrix）:
 $$
@@ -190,29 +166,34 @@ v J=\left(\begin{array}{ccc}\frac{\partial l}{\partial y_{1}} & \cdots & \frac{\
 $$
 
 注意：grad在反向传播过程中是累加的(accumulated)，这意味着每一次运行反向传播，梯度都会累加之前的梯度，所以一般在反向传播之前需把梯度清零。
+
+### 1.2.2.4 代码示例
 ``` python
-# 再来反向传播一次，注意grad是累加的
-out2 = x.sum()
-out2.backward()
-print(x.grad)
+import torch
+torch.manual_seed(10)  #用于设置随机数
 
-out3 = x.sum()
-x.grad.data.zero_()
-out3.backward()
-print(x.grad)
-```
-输出：
-```
-tensor([[5.5000, 5.5000],
-        [5.5000, 5.5000]])
-tensor([[1., 1.],
-        [1., 1.]])
-```
+w = torch.tensor([1.], requires_grad=True)    #创建叶子张量，并设定requires_grad为True，因为需要计算梯度；
+x = torch.tensor([2.], requires_grad=True)    #创建叶子张量，并设定requires_grad为True，因为需要计算梯度；
 
-> 现在我们解释2.3.1节留下的问题，为什么在`y.backward()`时，如果`y`是标量，则不需要为`backward()`传入任何参数；否则，需要传入一个与`y`同形的`Tensor`?
+a = torch.add(w, x)    #执行运算并搭建动态计算图
+b = torch.add(w, 1)
+y = torch.mul(a, b)
+
+y.backward(retain_graph=True)   #对y执行backward方法就可以得到x和w两个叶子节点
+print(w.grad)   #输出为tensor([5.])
+``` 
+从代码中可以发现对y求导使用的是y.backward()方法，也就是张量中的类方法。我们上面介绍的是torch.autograd中的backward()。这两个方法之间有什么联系呢？
+通过pycharm中的断点调试，可以发现y.backward()是Tensor.py中的一个类方法的函数。这个函数只有一行代码，就是调用torch.autograd.backward()。
+``` python
+def backward(self, gradient=None, retain_graph=None, create_graph=False):
+    torch.autograd.backward(self, gradient, retain_graph, create_graph)
+```
+从代码调试中可以知道张量中的backward()方法实际直接调用了torch.autograd中的backward()。
+backward()中有一个retain_grad参数，它是用来保存计算图的，如果还想执行一次反向传播 ，必须将retain_grad参数设置为retain_grad=True，否则代码会报错。因为如果没有retain_grad=True，每进行一次backward之后，计算图都会被清空，没法再进行一次backward()操作。
+
+**为什么在`y.backward()`时，如果`y`是标量，则不需要为`backward()`传入任何参数；否则，需要传入一个与`y`同形的`Tensor`?**
 简单来说就是为了避免向量（甚至更高维张量）对张量求导，而转换成标量对张量求导。举个例子，假设形状为 `m x n` 的矩阵 X 经过运算得到了 `p x q` 的矩阵 Y，Y 又经过运算得到了 `s x t` 的矩阵 Z。那么按照前面讲的规则，dZ/dY 应该是一个 `s x t x p x q` 四维张量，dY/dX 是一个 `p x q x m x n`的四维张量。问题来了，怎样反向传播？怎样将两个四维张量相乘？？？这要怎么乘？？？就算能解决两个四维张量怎么乘的问题，四维和三维的张量又怎么乘？导数的导数又怎么求，这一连串的问题，感觉要疯掉…… 
 为了避免这个问题，我们**不允许张量对张量求导，只允许标量对张量求导，求导结果是和自变量同形的张量**。所以必要时我们要把张量通过将所有张量的元素加权求和的方式转换为标量，举个例子，假设`y`由自变量`x`计算而来，`w`是和`y`同形的张量，则`y.backward(w)`的含义是：先计算`l = torch.sum(y * w)`，则`l`是个标量，然后求`l`对自变量`x`的导数。
-[参考](https://zhuanlan.zhihu.com/p/29923090)
 
 来看一些实际例子。
 ``` python
@@ -298,33 +279,7 @@ tensor([2.])
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## 2
-
-
-
-
-
-
-
-## autograd注意事项
+## 注意事项
 
 * 梯度不自动清零，如果不清零梯度会累加，所以需要在每次梯度后人为清零：w.grad.zero_()，_()是原位操作，在原始地址上进行更改。
 * 依赖于叶子结点的结点，requires_grad默认为True。
