@@ -43,52 +43,7 @@ device：张量所在设备，GPU/CPU
 </div>
 <div align=center>图1.3 动态计算图</div>
 
-
-## 1.2.2 autograd 自动求梯度
-深度学习模型的训练就是不断更新权值，权值的更新需要求解梯度，梯度在模型训练中是至关重要的。Pytorch提供自动求导系统，我们不需要手动计算梯度，只需要搭建好前向传播的计算图，然后根据Pytorch中的`autograd`方法就可以得到所有张量的梯度。
-  
-## 1.2.2.1 torch.autograd.backward 
-
-``` python
-torch.autograd.backward(tensors,
-                        grad_tensors=None,
-                        retain_grad=None,
-                        create_graph=False)
-```
-
-
->功能：自动求取梯度  
-tensors: 用于求导的张量，如loss  
-retain_graph : 保存计算图；由于pytorch采用动态图机制，在每一次反向传播结束之后，计算图都会释放掉。如果想继续使用计算图，就需要设置参数retain_graph为True  
-create_graph : 创建导数计算图，用于高阶求导，例如二阶导数、三阶导数等  
-grad_tensors：多梯度权重；当有多个loss需要去计算梯度的时候，就要设计各个loss之间的权重比例  
-
-
-## 1.2.2.2 torch.autograd.grad 
-
-``` python
-torch.qutograd.grad(outputs,
-                    inputs,
-                    grad_outputs=None,
-                    retain_graph=None,
-                    create_graph=False)
-```
->功能：求取梯度  
-outputs：用于求导的张量，如loss  
-inputs：需要梯度的张量，如w   
-create_graph：创建导数计算图，用于高阶求导   
-retain_graph：保存计算图  
-grad_outputs：多梯度权重   
-
-## 1.2.3 代码示例
-
-
-
-
-
-
-## 1.2.2 `Tensor`
-
+### 1.2.1.3 代码示例
 创建一个`Tensor`并设置`requires_grad=True`:
 ``` python
 x = torch.ones(2, 2, requires_grad=True)
@@ -120,7 +75,6 @@ tensor([[3., 3.],
 print(x.is_leaf, y.is_leaf) # True False
 ```
 
-
 再来点复杂度运算操作：
 ``` python
 z = y * y * 3
@@ -150,7 +104,44 @@ True
 <SumBackward0 object at 0x118f50cc0>
 ```
 
-## 2.3.3 梯度
+## 1.2.2 autograd 自动求梯度
+深度学习模型的训练就是不断更新权值，权值的更新需要求解梯度，梯度在模型训练中是至关重要的。Pytorch提供自动求导系统，我们不需要手动计算梯度，只需要搭建好前向传播的计算图，然后根据Pytorch中的`autograd`方法就可以得到所有张量的梯度。
+  
+### 1.2.2.1 torch.autograd.backward 
+
+``` python
+torch.autograd.backward(tensors,
+                        grad_tensors=None,
+                        retain_grad=None,
+                        create_graph=False)
+```
+
+
+>功能：自动求取梯度  
+tensors: 用于求导的张量，如loss  
+retain_graph : 保存计算图；由于pytorch采用动态图机制，在每一次反向传播结束之后，计算图都会释放掉。如果想继续使用计算图，就需要设置参数retain_graph为True  
+create_graph : 创建导数计算图，用于高阶求导，例如二阶导数、三阶导数等  
+grad_tensors：多梯度权重；当有多个loss需要去计算梯度的时候，就要设计各个loss之间的权重比例  
+
+
+### 1.2.2.2 torch.autograd.grad 
+
+``` python
+torch.qutograd.grad(outputs,
+                    inputs,
+                    grad_outputs=None,
+                    retain_graph=None,
+                    create_graph=False)
+```
+>功能：计算并返回outputs对inputs的梯度  
+outputs：用于求导的张量，如loss  
+inputs：需要梯度的张量，如w   
+create_graph：创建导数计算图，用于高阶求导   
+retain_graph：保存计算图  
+grad_outputs：多梯度权重   
+
+
+### 1.2.2.3 代码示例
 因为`out`是一个标量，所以调用`backward()`时不需要指定求导变量：
 ``` python
 out.backward() # 等价于 out.backward(torch.tensor(1.))
