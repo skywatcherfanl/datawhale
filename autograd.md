@@ -106,7 +106,8 @@ True
 
 ## 1.2.2 autograd 自动求梯度
 深度学习模型的训练就是不断更新权值，权值的更新需要求解梯度，梯度在模型训练中是至关重要的。Pytorch提供自动求导系统，我们不需要手动计算梯度，只需要搭建好前向传播的计算图，然后根据Pytorch中的`autograd`方法就可以得到所有张量的梯度。
-  
+PyTorch中，所有神经网络的核心是autograd包。autograd包为张量上的所有操作提供了自动求导机制。它是一个在运行时定义（define-by-run）的框架，这意味着反向传播是根据代码如何运行来决定的，并且每次迭代可以是不同的。
+
 ### 1.2.2.1 torch.autograd.backward 
 
 ``` python
@@ -142,6 +143,42 @@ grad_outputs：多梯度权重
 
 
 ### 1.2.2.3 代码示例
+``` python
+import torch
+torch.manual_seed(10)  #用于设置随机数
+
+w = torch.tensor([1.], requires_grad=True)    #创建叶子张量，并设定requires_grad为True，因为需要计算梯度；
+x = torch.tensor([2.], requires_grad=True)    #创建叶子张量，并设定requires_grad为True，因为需要计算梯度；
+
+a = torch.add(w, x)    #执行运算并搭建动态计算图
+b = torch.add(w, 1)
+y = torch.mul(a, b)
+
+y.backward(retain_graph=True)   #对y执行backward方法就可以得到x和w两个叶子节点
+print(w.grad)   #输出为tensor([5.])
+``` 
+从代码中可以发现对y求导使用的是y.backward()方法，也就是张量中的类方法。我们上面介绍的是torch.autograd中的backward()。这两个方法之间有什么联系呢？
+通过pycharm中的断点调试，可以发现y.backward()是Tensor.py中的一个类方法的函数。这个函数只有一行代码，就是调用torch.autograd.backward()。
+``` python
+def backward(self, gradient=None, retain_graph=None, create_graph=False):
+    torch.autograd.backward(self, gradient, retain_graph, create_graph)
+```
+从代码调试中可以知道张量中的backward()方法实际直接调用了torch.autograd中的backward()。
+backward()中有一个retain_grad参数，它是用来保存计算图的，如果还想执行一次反向传播 ，必须将retain_grad参数设置为retain_grad=True，否则代码会报错。因为如果没有retain_grad=True，每进行一次backward之后，计算图都会被清空，没法再进行一次backward()操作。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 因为`out`是一个标量，所以调用`backward()`时不需要指定求导变量：
 ``` python
 out.backward() # 等价于 out.backward(torch.tensor(1.))
