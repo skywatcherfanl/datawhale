@@ -26,6 +26,22 @@
 <div align=center>图1.1 动态计算图</div>
 
 
+## torch.autograd
+
+**1）torch.autograd.backward(tensors,grad_tensors=None,retain_graph=None,create_graph=False)，自动求梯度**
+
+>tensors: 用于求导的张量
+retain_graph : 保存计算图
+create_graph : 创建导数计算图，用于高阶求导
+grad_tensors：多梯度权重，当一个神经元具有多个loss时需要对不同loss的梯度进行赋权
+
+**2）torch.autograd.grad(outputs,inputs,grad_outputs=None,retain_graph=None,create_graph=False)，求梯度**
+
+>outputs: 用于求导的张量，如 loss
+inputs : 需要梯度的张量
+create_graph : 创建导数计算图，用于高阶求导
+retain_graph : 保存计算图
+grad_outputs：多梯度权重
 
 
 
@@ -276,8 +292,10 @@ tensor([2.])
 
 ## 小结
 
-* 使用循环计算的网络即循环神经网络。
-
+autograd注意事项
+* 梯度不自动清零，如果不清零梯度会累加，所以需要在每次梯度后人为清零：w.grad.zero_()，_()是原位操作，在原始地址上进行更改。
+* 依赖于叶子结点的结点，requires_grad默认为True
+* 叶子结点不可执行in-place，因为其他节点在计算梯度时需要用到叶子节点，所以叶子地址中的值不得改变否则会是其他节点求梯度时出错。所以叶子节点不能进行原位计算。
 
 -----------
 > [原书传送门](https://zh.d2l.ai/chapter_recurrent-neural-networks/rnn.html)
