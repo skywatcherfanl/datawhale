@@ -4,12 +4,9 @@
 在深度学习中，我们经常需要对函数求梯度（gradient）。PyTorch提供的[autograd](https://pytorch.org/docs/stable/autograd.html)包能够根据输入和前向传播过程自动构建计算图，并执行反向传播。本节将介绍如何使用autograd包来进行自动求梯度的有关操作。
 
 ## 1.2.1 概念
-Tensor是PyTorch实现多维数组计算和自动微分的关键数据结构。一方面，它类似于numpy的ndarray，用户可以对Tensor进行各种数学运算；另一方面，当设置.requires_grad = True之后，在其上进行的各种操作就会被记录下来，用于后续的梯度计算，其内部实现机制被成为动态计算图(dynamic computation graph)。
+`Tensor`是PyTorch实现多维数组计算和自动微分的关键数据结构。一方面，它类似于numpy的ndarray，用户可以对`Tensor`进行各种数学运算；另一方面，当设置`.requires_grad = True`之后，在其上进行的各种操作就会被记录下来，它将开始追踪在其上的所有操作（这样就可以利用链式法则进行梯度传播了），其内部实现机制被称为动态计算图(dynamic computation graph)。完成计算后，可以调用`.backward()`来完成所有梯度计算。此`Tensor`的梯度将累积到`.grad`属性中。
 
-上一节介绍的`Tensor`是这个包的核心类，如果将其属性`.requires_grad`设置为`True`，它将开始追踪(track)在其上的所有操作（这样就可以利用链式法则进行梯度传播了）。完成计算后，可以调用`.backward()`来完成所有梯度计算。此`Tensor`的梯度将累积到`.grad`属性中。
-> 注意在`y.backward()`时，如果`y`是标量，则不需要为`backward()`传入任何参数；否则，需要传入一个与`y`同形的`Tensor`。解释见 2.3.2 节。
-
-如果不想要被继续追踪，可以调用`.detach()`将其从追踪记录中分离出来，这样就可以防止将来的计算被追踪，这样梯度就传不过去了。此外，还可以用`with torch.no_grad()`将不想被追踪的操作代码块包裹起来，这种方法在评估模型的时候很常用，因为在评估模型时，我们并不需要计算可训练参数（`requires_grad=True`）的梯度。
+如果不想要被继续追踪，可以调用`.detach()`将其从追踪记录中分离出来，可以防止将来的计算被追踪，这样梯度就传不过去了。此外，还可以用`with torch.no_grad()`将不想被追踪的操作代码块包裹起来，这种方法在评估模型的时候很常用，因为在评估模型时，我们并不需要计算可训练参数（`requires_grad=True`）的梯度。
 
 `Function`是另外一个很重要的类。`Tensor`和`Function`互相结合就可以构建一个记录有整个计算过程的有向无环图（DAG）。每个`Tensor`都有一个`.grad_fn`属性，该属性即创建该`Tensor`的`Function`, 就是说该`Tensor`是不是通过某些运算得到的，若是，则`grad_fn`返回一个与这些运算相关的对象，否则是None。
 
