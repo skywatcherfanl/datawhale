@@ -3,12 +3,31 @@
 
 在深度学习中，我们经常需要对函数求梯度（gradient）。PyTorch提供的[autograd](https://pytorch.org/docs/stable/autograd.html)包能够根据输入和前向传播过程自动构建计算图，并执行反向传播。本节将介绍如何使用autograd包来进行自动求梯度的有关操作。
 
-## 1.2.1 概念
+## 1.2.1 PyTorch的autograd简介
+
+
+
+
+
 `Tensor`是PyTorch实现多维数组计算和自动微分的关键数据结构。一方面，它类似于numpy的ndarray，用户可以对`Tensor`进行各种数学运算；另一方面，当设置`.requires_grad = True`之后，在其上进行的各种操作就会被记录下来，它将开始追踪在其上的所有操作（这样就可以利用链式法则进行梯度传播了），其内部实现机制被称为动态计算图(dynamic computation graph)。完成计算后，可以调用`.backward()`来完成所有梯度计算。此`Tensor`的梯度将累积到`.grad`属性中。
 
 如果不想要被继续追踪，可以调用`.detach()`将其从追踪记录中分离出来，可以防止将来的计算被追踪，这样梯度就传不过去了。此外，还可以用`with torch.no_grad()`将不想被追踪的操作代码块包裹起来，这种方法在评估模型的时候很常用，因为在评估模型时，我们并不需要计算可训练参数（`requires_grad=True`）的梯度。
 
-`Function`是另外一个很重要的类。`Tensor`和`Function`互相结合就可以构建一个记录有整个计算过程的有向无环图（DAG）。每个`Tensor`都有一个`.grad_fn`属性，该属性即创建该`Tensor`的`Function`, 就是说该`Tensor`是不是通过某些运算得到的，若是，则`grad_fn`返回一个与这些运算相关的对象，否则是None。
+
+### 1.2.1.3 Function类
+`Function`是另外一个很重要的类。`Tensor`和`Function`互相结合就可以构建一个记录有整个计算过程的有向无环图（DAG）。每个`Tensor`都有一个`.grad_fn`属性，该属性即创建该`Tensor`的`Function`，就是说该`Tensor`是不是通过某些运算得到的，若是，则`grad_fn`返回一个与这些运算相关的对象，否则是None。
+
+我们已经知道PyTorch使用动态计算图(DAG)记录计算的全过程，那么DAG是怎样建立的呢？DAG的节点是`Function`对象，边表示数据依赖，从输出指向输入。
+每当对`Tensor`施加一个运算的时候，就会产生一个`Function`对象，它产生运算的结果，记录运算的发生，并且记录运算的输入。`Tensor`使用`.grad_fn`属性记录这个计算图的入口。反向传播过程中，autograd引擎会按照逆序，通过`Function`的`backward`依次计算梯度。
+
+<div align=center>
+<img width="500" src="image/动态计算图.gif"/>
+</div>
+<div align=center>图1.1 动态计算图</div>
+
+
+
+
 
 下面通过一些例子来理解这些概念。  
 
@@ -250,10 +269,7 @@ tensor([2.])
 ## 2
 
 
-<div align=center>
-<img width="500" src="image/动态计算图.gif"/>
-</div>
-<div align=center>图3.1 含隐藏状态的循环神经网络</div>
+
 
 
 
