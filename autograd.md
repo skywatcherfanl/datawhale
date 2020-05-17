@@ -127,7 +127,7 @@ grad_tensors：多梯度权重；当有多个loss需要去计算梯度的时候�
 ### 1.2.2.2 torch.autograd.grad 
 
 ``` python
-torch.qutograd.grad(outputs,
+torch.autograd.grad(outputs,
                     inputs,
                     grad_outputs=None,
                     retain_graph=None,
